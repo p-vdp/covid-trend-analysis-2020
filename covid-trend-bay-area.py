@@ -163,8 +163,8 @@ fig, axs = plt.subplots(2, 1, figsize=(18, 9))   # one over one layout
 axs[0].plot(xdata, moving_7day_avg['avg_sum_7day'], label='Moving 7-Day Average')
 axs[0].plot(xdata, moving_7day_avg['avg_sum_14day'], label='Moving 14-Day Average')
 axs[0].plot(xdata, moving_7day_avg['avg_sum_28day'], label='Moving 28-Day Average')
-axs[0].plot(xdata, curve_p1(xdata), label='Curve fit 12deg')
-axs[0].plot(xdata, curve_p2(xdata), label='Curve fit 13deg')
+axs[0].plot(xdata, curve_p1(xdata), label='Curve fit 4deg')
+axs[0].plot(xdata, curve_p2(xdata), label='Curve fit 5deg')
 
 
 axs[0].set_ylim(0)
