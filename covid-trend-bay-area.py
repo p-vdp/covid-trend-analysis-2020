@@ -127,32 +127,42 @@ moving_7day_avg = moving_7day_avg.replace({None: 0})
 # print(moving_7day_avg)
 
 
-# calc curve fit for 28 day
+# filter dates to start 5/25 (Memorial Day)
+skip_days = 120
+moving_7day_avg = moving_7day_avg[skip_days:]
 xdata = dates1.index.to_numpy()
+xdata = xdata[skip_days:]
+# print(moving_7day_avg)
+# print(xdata)
+
+
+# calc curve fit for 28 day
 ydata = moving_7day_avg['avg_sum_28day'].to_numpy()
 
-curve_params1 = np.polyfit(xdata, ydata, 11, full=True)
+curve_params1 = np.polyfit(xdata, ydata, 4, full=True)
 r_squared1 = curve_params1[1]
 curve_p1 = np.poly1d(curve_params1[0])
 
-curve_params2 = np.polyfit(xdata, ydata, 12, full=True)
+curve_params2 = np.polyfit(xdata, ydata, 5, full=True)
 r_squared2 = curve_params2[1]
 curve_p2 = np.poly1d(curve_params2[0])
 
-# project out x days
-last = xdata[-1]
-for i in range(0, 14):
-    xdata = np.append(xdata, last + i)
-    i += 1
-# print(xdata)
+
+# # project out x days
+# last = xdata[-1]
+# for i in range(0, 14):
+#     xdata = np.append(xdata, last + i)
+#     i += 1
+# # print(xdata)
+
 
 # plot it!
 fig, axs = plt.subplots(2, 1, figsize=(18, 9))   # one over one layout
 
-axs[0].plot(dates1, moving_7day_avg['sum'], label='Regional Total')
-axs[0].plot(dates1, moving_7day_avg['avg_sum_7day'], label='Moving 7-Day Average')
-axs[0].plot(dates1, moving_7day_avg['avg_sum_14day'], label='Moving 14-Day Average')
-axs[0].plot(dates1, moving_7day_avg['avg_sum_28day'], label='Moving 28-Day Average')
+# axs[0].plot(dates1, moving_7day_avg['sum'], label='Regional Total')
+axs[0].plot(xdata, moving_7day_avg['avg_sum_7day'], label='Moving 7-Day Average')
+axs[0].plot(xdata, moving_7day_avg['avg_sum_14day'], label='Moving 14-Day Average')
+axs[0].plot(xdata, moving_7day_avg['avg_sum_28day'], label='Moving 28-Day Average')
 axs[0].plot(xdata, curve_p1(xdata), label='Curve fit 12deg')
 axs[0].plot(xdata, curve_p2(xdata), label='Curve fit 13deg')
 
