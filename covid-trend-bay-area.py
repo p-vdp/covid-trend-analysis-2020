@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy import optimize
 import urllib.request as urll
 from matplotlib.ticker import MultipleLocator, AutoMinorLocator
 
@@ -14,8 +13,9 @@ def filter_csv(filepath, filter_col, filter_list):
 def preprocess_and_split(df, selection_counties_list, selection_cols_to_drop):
     # drop unwanted columns
     for col in selection_cols_to_drop:
-        if col in df: df.pop(col)
-    
+        if col in df:
+            df.pop(col)
+
     # transpose
     df.reset_index(drop=True, inplace=True)
     df = df.transpose()
@@ -27,14 +27,14 @@ def preprocess_and_split(df, selection_counties_list, selection_cols_to_drop):
 
     dates = df.pop('Date')
     dates = pd.to_datetime(dates, errors='raise', infer_datetime_format=True)
- 
+
     return df, dates
 
 
 def extract_populations(df, filter_col, pop_col, selection_counties_list):
     # filter
     df2 = pd.DataFrame({'County': df[filter_col], 'Pop': df[pop_col]})
-    
+
     # transpose
     df2.reset_index(drop=True, inplace=True)
     df2 = df2.transpose()
