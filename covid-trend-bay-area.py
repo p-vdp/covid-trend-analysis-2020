@@ -6,7 +6,12 @@ import matplotlib.style
 from matplotlib.ticker import AutoMinorLocator, FixedLocator, MultipleLocator
 import numpy as np
 import pandas as pd
+from RegscorePy.aic import aic
+from RegscorePy.bic import bic
+import scipy as sp
+import scipy.stats as stats
 import urllib.request as urll
+from sklearn.linear_model import BayesianRidge
 from sys import argv
 
 
@@ -173,7 +178,6 @@ ax.tick_params(which='both', color=custom_tick_color)
 # subfig 1: calc curve fits for 28-day moving average, range defines number of curves (degrees)
 print('Fitting curves for projections...')
 
-
 # filter dates to only use last 28 days for curve regression
 skip_days = len(dates_cases) - 28
 normed_cases_dataset_skipped = normed_cases_dataset[skip_days:]
@@ -192,27 +196,82 @@ for i in range(1, projection_n):
     xdata_plus = xdata_plus.append(appended_day)
     xdata_last = xdata_last.append(appended_day)
 
-
 ydata = normed_cases_dataset_skipped['avg_sum_28day'].to_numpy()
 xdata_index = xdata.index.to_numpy()
 
-xdata_last_index = xdata_plus.index.to_numpy()
-xdata_last_index = xdata_last_index[-1 - projection_n:-1]
+xdata_plus_index = xdata_plus.index.to_numpy()
+xdata_last_index = xdata_plus_index[-1 - projection_n:-1]
 
-for i in range(2, 8):
+curves = []
+
+# for i in range(2, 6):
+#     curve_params = np.polyfit(xdata_index, ydata, i, full=True)
+#     curve = np.poly1d(curve_params[0])
+#     curves.append(curve)
+#     r_squared = round(float(curve_params[1]), 1)
+#     axs1.plot(xdata_plus, curve(xdata_plus_index), label=str(i) + '-degree fit, R = ' + str(r_squared))
+
+for i in range(1, 6):                                           # https://stackoverflow.com/a/28336695
     curve_params = np.polyfit(xdata_index, ydata, i, full=True)
-    curve = np.poly1d(curve_params[0])
-    r_squared = round(float(curve_params[1]), 1)
-    axs1.plot(xdata_last, curve(xdata_last_index), label=str(i) + '-degree fit, R = ' + str(r_squared))
+    p = curve_params[0]
+    curve = np.poly1d(p)
+    y_model = curve(xdata_index)
 
-axs1_leg = axs1.legend(loc='upper left', title='28-Day Projection')
+    n = ydata.size
+    k = p.size
+    dof = n - k
+    s_err = stats.sem(y_model)
+
+    # https://pypi.org/project/RegscorePy/  lower is better
+    resid = np.subtract(y_model, ydata)
+    rss = np.sum(np.power(resid, 2))
+    # aic = round(n * np.log(rss/n) + 2 * k, 1)
+    bic = round(n * np.log(rss/n) + k * np.log(n), 1)
+
+    x2 = np.linspace(np.min(xdata_index), np.max(xdata_index), 100)
+    y2 = curve(x2)
+    t = stats.t.ppf(0.99, dof)
+    ci = t * s_err * np.sqrt(1/n + (x2 - np.mean(xdata_index))**2 / np.sum((xdata_index - np.mean(xdata_index))**2))
+    ci *= 1.2    # exaggerate
+    ci_upper = np.poly1d(np.polyfit(x2, y2 + ci, i))
+    ci_lower = np.poly1d(np.polyfit(x2, y2 - ci, i))
+
+    axs1.plot(xdata_plus, curve(xdata_plus_index), linewidth=1,
+              label=str(i) + '-Degree Fit, BIC = ' + str(bic))
+    axs1.fill_between(xdata_plus, ci_upper(xdata_plus_index), ci_lower(xdata_plus_index), alpha=0.3)
+
+
+
+
+# # evaluate curves with Bayesian Ridge regression
+# x_train = xdata_index.reshape(-1, 1)
+# x_test = xdata_last_index.reshape(-1, 1)
+# y_train = ydata
+# bayesian_ridge_reg = BayesianRidge(tol=1e-100, fit_intercept=True, compute_score=True)
+# bayesian_ridge_reg.set_params(verbose=True, alpha_init=1.0, lambda_init=1e-200)
+# axs1.plot(x_train, y_train)
+# bayesian_ridge_reg.fit(x_train, y_train)
+# ymean, ystd = bayesian_ridge_reg.predict(x_train, return_std=True)
+# axs1.plot(x_train, ymean)
+# axs1.fill_between(xdata_index, ymean-ystd, ymean+ystd,
+#                   color="pink", alpha=0.5, label="predict std")
+# print(bayesian_ridge_reg.scores_[-1])
+
+
+
+
+# plot
+# axs1.plot(xdata, ydata, label='Moving 28-Day Average',
+#         linewidth=4, color='#6C71C4')
+
+axs1_leg = axs1.legend(loc='upper left', title=r"$\bf{28-Day Projection}$")
 axs1_leg._legend_box.align = 'left'
 axs1.set_ylim(150, 650)
-axs1.set_xlim(left=last_day, right=max(xdata_plus))
+xlim_left = dates_cases[skip_days + 27]
+axs1.set_xlim(left=xlim_left, right=max(xdata_plus))
 axs1.xaxis.set_major_locator(DayLocator(interval=7))
 axs1.xaxis.set_minor_locator(DayLocator(interval=1))
 axs1.tick_params(which='both', color=custom_tick_color)
-# axs1.grid()
 
 
 # print('Plotting counties...')
