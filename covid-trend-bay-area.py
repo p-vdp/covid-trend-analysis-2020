@@ -1,17 +1,12 @@
 import matplotlib as mpl
-from matplotlib.dates import AutoDateLocator, DayLocator, MonthLocator
+from matplotlib.dates import DayLocator, MonthLocator
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import matplotlib.style
-from matplotlib.ticker import AutoMinorLocator, FixedLocator, MultipleLocator
 import numpy as np
 import pandas as pd
-from RegscorePy.aic import aic
-from RegscorePy.bic import bic
-import scipy as sp
 import scipy.stats as stats
 import urllib.request as urll
-from sklearn.linear_model import BayesianRidge
 from sys import argv
 
 
@@ -60,7 +55,6 @@ def extract_populations(df, co_filter, pop_col, selection):
 def totals_to_deltas(df):
     df = df.diff(periods=1, axis='index')
     df = df.replace({None: 0})
-    # df = df.where(df > 0, 0)  # don't do this, it gives bad totals
 
     return df
 
@@ -74,6 +68,7 @@ cases_confirmed_url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19
 cases_deaths_url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data' \
                    '/csse_covid_19_time_series/time_series_covid19_deaths_US.csv '
 
+# selection_counties_list = ['Los Angeles']
 selection_counties_list = ['Alameda', 'Contra Costa', 'Marin', 'Napa', 'San Francisco', 'San Mateo', 'Santa Clara',
                            'Solano', 'Sonoma']
 selection_counties = pd.Series(selection_counties_list)
@@ -84,6 +79,7 @@ filter_col = 'Admin2'
 scrape_flag = False
 if len(argv) > 1 and argv[1] == '-d':
     scrape_flag = True
+
 
 # main
 
@@ -96,6 +92,7 @@ if scrape_flag:
 
 print('Preprocessing...')
 
+
 # extract county population totals
 popu_counties = selection_counties_list
 popu_counties = pd.Series(popu_counties)
@@ -103,17 +100,21 @@ cases_deaths_og = filter_csv('cases_deaths.csv', filter_col, popu_counties)
 county_populations = extract_populations(cases_deaths_og, filter_col, 'Population', popu_counties)
 county_populations = county_populations[0]
 
+
 # filter by county
 cases_confirmed = filter_csv('cases_confirmed.csv', filter_col, selection_counties)
 cases_deaths = filter_csv('cases_deaths.csv', filter_col, selection_counties)
+
 
 # cleanup tables and convert to array of counties data as pd.Series; index 0 is array of dates
 cases_confirmed, dates_cases = preprocess_and_split(cases_confirmed, selection_counties_list, selection_cols_to_drop)
 cases_deaths, dades_deaths = preprocess_and_split(cases_deaths, selection_counties_list, selection_cols_to_drop)
 
+
 # calc daily cases from totals
 cases_confirmed_daily = totals_to_deltas(cases_confirmed)
 cases_deaths_daily = totals_to_deltas(cases_deaths)
+
 
 # cases and deaths per 100k, normalized by county population
 cases_confirmed_county = cases_confirmed_daily
@@ -126,6 +127,7 @@ cases_deaths_county = cases_deaths_daily
 for county in cases_deaths_county:
     co_pop = county_populations[county]
     cases_deaths_county[county] = cases_deaths_county[county].div(co_pop) * 100000.0
+
 
 # calc overall normalized cases per 100k and moving 7-day average
 normed_cases_dataset = cases_confirmed_daily
@@ -146,10 +148,10 @@ font_size = 10
 plt.rcParams['font.size'] = font_size
 custom_tick_color = '#d4cfbe'
 fig = plt.figure(tight_layout=True, figsize=(10, 8))
-gs = gridspec.GridSpec(2, 2)
-ax = fig.add_subplot(gs[0, :])
-axs1 = fig.add_subplot(gs[1, :])
-# axs2 = fig.add_subplot(gs[1, 1])
+gs = gridspec.GridSpec(2, 1)
+ax = fig.add_subplot(gs[0, 0])
+axs1 = fig.add_subplot(gs[1, 0])
+
 
 # top fig: totals and averages normalized per 100k
 print('Plotting totals and averages...')
@@ -162,20 +164,21 @@ ax.plot(dates_cases, normed_cases_dataset['avg_sum_14day'], label='Moving 14-Day
         linewidth=2, color='#D33682')
 ax.plot(dates_cases, normed_cases_dataset['avg_sum_28day'], label='Moving 28-Day Average',
         linewidth=2, color='#6C71C4')
-# ax.scatter(dates_cases.last_valid_index(), normed_cases_dataset.last_valid_index())
 
-ax_leg = ax.legend(loc='upper left', title='New Confirmed Cases Per 100k')
+ax_leg = ax.legend(loc='upper left', title=r'$\bf{New}$' + ' ' +
+                                           r'$\bf{Confirmed}$' + ' ' +
+                                           r'$\bf{Cases}$' + ' ' +
+                                           r'$\bf{Per}$' + ' ' +
+                                           r'$\bf{100k}$')
 ax_leg._legend_box.align = 'left'
-ax.set_ylim(0, 400)
+ax.set_ylim(0, 450)
 ax.set_xlim(dates_cases[131], right=max(dates_cases))
 ax.xaxis.set_major_locator(MonthLocator(bymonth=range(6, 13)))
 ax.xaxis.set_minor_locator(DayLocator(bymonthday=[15]))
 ax.tick_params(which='both', color=custom_tick_color)
-# ax.set_ylabel(ylabel='New Confirmed Cases Per 100k', fontsize=font_size)
-# ax.grid()
 
 
-# subfig 1: calc curve fits for 28-day moving average, range defines number of curves (degrees)
+# bottom fig: calc curve fits for 28-day moving average, range defines number of curves (degrees)
 print('Fitting curves for projections...')
 
 # filter dates to only use last 28 days for curve regression
@@ -202,16 +205,9 @@ xdata_index = xdata.index.to_numpy()
 xdata_plus_index = xdata_plus.index.to_numpy()
 xdata_last_index = xdata_plus_index[-1 - projection_n:-1]
 
-curves = []
 
-# for i in range(2, 6):
-#     curve_params = np.polyfit(xdata_index, ydata, i, full=True)
-#     curve = np.poly1d(curve_params[0])
-#     curves.append(curve)
-#     r_squared = round(float(curve_params[1]), 1)
-#     axs1.plot(xdata_plus, curve(xdata_plus_index), label=str(i) + '-degree fit, R = ' + str(r_squared))
-
-for i in range(1, 6):                                           # https://stackoverflow.com/a/28336695
+# create regression curves and evaluate model fitness # https://stackoverflow.com/a/28336695
+for i in range(1, 5):
     curve_params = np.polyfit(xdata_index, ydata, i, full=True)
     p = curve_params[0]
     curve = np.poly1d(p)
@@ -222,10 +218,9 @@ for i in range(1, 6):                                           # https://stacko
     dof = n - k
     s_err = stats.sem(y_model)
 
-    # https://pypi.org/project/RegscorePy/  lower is better
+    # https://pypi.org/project/RegscorePy/  BIC, lower is better
     resid = np.subtract(y_model, ydata)
     rss = np.sum(np.power(resid, 2))
-    # aic = round(n * np.log(rss/n) + 2 * k, 1)
     bic = round(n * np.log(rss/n) + k * np.log(n), 1)
 
     x2 = np.linspace(np.min(xdata_index), np.max(xdata_index), 100)
@@ -241,59 +236,18 @@ for i in range(1, 6):                                           # https://stacko
     axs1.fill_between(xdata_plus, ci_upper(xdata_plus_index), ci_lower(xdata_plus_index), alpha=0.3)
 
 
-
-
-# # evaluate curves with Bayesian Ridge regression
-# x_train = xdata_index.reshape(-1, 1)
-# x_test = xdata_last_index.reshape(-1, 1)
-# y_train = ydata
-# bayesian_ridge_reg = BayesianRidge(tol=1e-100, fit_intercept=True, compute_score=True)
-# bayesian_ridge_reg.set_params(verbose=True, alpha_init=1.0, lambda_init=1e-200)
-# axs1.plot(x_train, y_train)
-# bayesian_ridge_reg.fit(x_train, y_train)
-# ymean, ystd = bayesian_ridge_reg.predict(x_train, return_std=True)
-# axs1.plot(x_train, ymean)
-# axs1.fill_between(xdata_index, ymean-ystd, ymean+ystd,
-#                   color="pink", alpha=0.5, label="predict std")
-# print(bayesian_ridge_reg.scores_[-1])
-
-
-
-
 # plot
-# axs1.plot(xdata, ydata, label='Moving 28-Day Average',
-#         linewidth=4, color='#6C71C4')
-
-axs1_leg = axs1.legend(loc='upper left', title=r"$\bf{28-Day !Projection}$")
-axs1_leg._legend_box.align = 'left'
-axs1.set_ylim(150, 650)
 xlim_left = dates_cases[skip_days + 27]
+ylim_bottom = 150
+
+axs1_leg = axs1.legend(loc='upper left', title=r'$\bf{28}$' + '-' + r'$\bf{Day}$' + ' ' + r'$\bf{Projection}$')
+axs1_leg._legend_box.align = 'left'
+
+axs1.set_ylim(ylim_bottom, 1100)
 axs1.set_xlim(left=xlim_left, right=max(xdata_plus))
 axs1.xaxis.set_major_locator(DayLocator(interval=7))
 axs1.xaxis.set_minor_locator(DayLocator(interval=1))
 axs1.tick_params(which='both', color=custom_tick_color)
-
-
-# print('Plotting counties...')
-# for county in selection_counties_list:
-#     axs2.plot(dates_cases, normed_cases_dataset[county], label=county, linewidth=1.0)
-#
-# axs2.set_ylim(0)
-# axs2.set_xlim(dates_cases[39], right=max(dates_cases))
-# axs2.tick_params(which='both', color=custom_tick_color)
-# axs2.xaxis.set_major_locator(MultipleLocator(48))
-# axs2.xaxis.set_minor_locator(AutoMinorLocator())
-# axs2_leg = axs2.legend(loc='upper left', title='New Cases Per 100k by County')
-# axs2_leg._legend_box.align = 'left'
-
-# axs1.set_ylim(0)
-# # xmax = axs1.get_xlim()[1]
-# # axs1.set_xlim(xmax - 75, xmax - 15)
-# axs1.set_xlim(45)
-# axs1.legend(loc='upper left', title='Recent Cases Per 100k Pop. by County')
-# axs1.xaxis.set_major_locator(MultipleLocator(28))
-# axs1.xaxis.set_minor_locator(AutoMinorLocator())
-# axs1.grid()
 
 print('Displaying plot...')
 plt.show()
