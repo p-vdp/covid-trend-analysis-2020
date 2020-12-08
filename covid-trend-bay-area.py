@@ -1,8 +1,9 @@
 import matplotlib as mpl
+from matplotlib.dates import AutoDateLocator, DayLocator, MonthLocator
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import matplotlib.style
-from matplotlib.ticker import MultipleLocator, AutoMinorLocator
+from matplotlib.ticker import AutoMinorLocator, FixedLocator, MultipleLocator
 import numpy as np
 import pandas as pd
 import urllib.request as urll
@@ -133,90 +134,98 @@ normed_cases_dataset['avg_sum_28day'] = normed_cases_dataset['sum_28day'].div(28
 normed_cases_dataset = normed_cases_dataset.replace({None: 0})
 
 
-# plot setup, one over two layout
+# plot setup
 mpl.style.use('Solarize_Light2')
 mpl.rcParams['text.color'] = '#4f6066'
+font_size = 10
+plt.rcParams['font.size'] = font_size
 custom_tick_color = '#d4cfbe'
-fig = plt.figure(tight_layout=True, figsize=(18, 9))
+fig = plt.figure(tight_layout=True, figsize=(10, 8))
 gs = gridspec.GridSpec(2, 2)
 ax = fig.add_subplot(gs[0, :])
-axs1 = fig.add_subplot(gs[1, 0])
-axs2 = fig.add_subplot(gs[1, 1])
+axs1 = fig.add_subplot(gs[1, :])
+# axs2 = fig.add_subplot(gs[1, 1])
 
 # top fig: totals and averages normalized per 100k
 print('Plotting totals and averages...')
 
-ax_line = ax.plot(dates_cases, normed_cases_dataset['sum'], label='Total - All Bay Area Counties', linewidth=1.5)
-ax.plot(dates_cases, normed_cases_dataset['avg_sum_7day'], label='Moving 7-Day Average', linewidth=3.5)
-ax.plot(dates_cases, normed_cases_dataset['avg_sum_14day'], label='Moving 14-Day Average', linewidth=3.5)
-ax.plot(dates_cases, normed_cases_dataset['avg_sum_28day'], label='Moving 28-Day Average', linewidth=3.5)
+ax_line = ax.plot(dates_cases, normed_cases_dataset['sum'], label='Total - Nine Bay Area Counties',
+                  linewidth=1, color='#99958a')
+ax.plot(dates_cases, normed_cases_dataset['avg_sum_7day'], label='Moving 7-Day Average',
+        linewidth=2, color='#2AA198')
+ax.plot(dates_cases, normed_cases_dataset['avg_sum_14day'], label='Moving 14-Day Average',
+        linewidth=2, color='#D33682')
+ax.plot(dates_cases, normed_cases_dataset['avg_sum_28day'], label='Moving 28-Day Average',
+        linewidth=2, color='#6C71C4')
 # ax.scatter(dates_cases.last_valid_index(), normed_cases_dataset.last_valid_index())
 
-ax_leg = ax.legend(loc='upper left', title='New Cases Per 100k')
+ax_leg = ax.legend(loc='upper left', title='New Confirmed Cases Per 100k')
 ax_leg._legend_box.align = 'left'
-ax.set_ylim(0, 350)
-ax.set_xlim(dates_cases[39], right=max(dates_cases))
-ax.xaxis.set_major_locator(MultipleLocator(28))
-ax.xaxis.set_minor_locator(AutoMinorLocator())
+ax.set_ylim(0, 400)
+ax.set_xlim(dates_cases[131], right=max(dates_cases))
+ax.xaxis.set_major_locator(MonthLocator(bymonth=range(6, 13)))
+ax.xaxis.set_minor_locator(DayLocator(bymonthday=[15]))
 ax.tick_params(which='both', color=custom_tick_color)
+# ax.set_ylabel(ylabel='New Confirmed Cases Per 100k', fontsize=font_size)
 # ax.grid()
 
 
 # subfig 1: calc curve fits for 28-day moving average, range defines number of curves (degrees)
-print('Fitting curves for 14-day projections...')
+print('Fitting curves for projections...')
 
 
-# filter dates to start 5/25 (Memorial Day)
-skip_days = 124
+# filter dates to only use last 28 days for curve regression
+skip_days = len(dates_cases) - 28
 normed_cases_dataset_skipped = normed_cases_dataset[skip_days:]
 xdata = dates_cases[skip_days:]
 
-# project out 14 days
-xdata_plus14 = xdata
-last_index = xdata_plus14.last_valid_index()
+# project out n days
+projection_n = 28
+xdata_plus = xdata
+last_index = xdata_plus.last_valid_index()
 
-last_day = xdata_plus14.iat[-1]
-xdata_last14 = pd.Series(last_day)
+last_day = xdata_plus.iat[-1]
+xdata_last = pd.Series(last_day)
 
-for i in range(1, 15):
+for i in range(1, projection_n):
     appended_day = pd.Series(data=last_day + pd.DateOffset(days=i), index=[last_index + i])
-    xdata_plus14 = xdata_plus14.append(appended_day)
-    xdata_last14 = xdata_last14.append(appended_day)
+    xdata_plus = xdata_plus.append(appended_day)
+    xdata_last = xdata_last.append(appended_day)
 
 
 ydata = normed_cases_dataset_skipped['avg_sum_28day'].to_numpy()
 xdata_index = xdata.index.to_numpy()
 
-xdata_last14_index = xdata_plus14.index.to_numpy()
-xdata_last14_index = xdata_last14_index[-16:-1]
+xdata_last_index = xdata_plus.index.to_numpy()
+xdata_last_index = xdata_last_index[-1 - projection_n:-1]
 
-for i in range(4, 11):
+for i in range(2, 8):
     curve_params = np.polyfit(xdata_index, ydata, i, full=True)
     curve = np.poly1d(curve_params[0])
     r_squared = round(float(curve_params[1]), 1)
-    axs1.plot(xdata_last14, curve(xdata_last14_index), label=str(i) + '-deg. fit, R = ' + str(r_squared))
+    axs1.plot(xdata_last, curve(xdata_last_index), label=str(i) + '-degree fit, R = ' + str(r_squared))
 
-axs1_leg = axs1.legend(loc='upper left', title='14-day Projection (Curve Fit to 28-day Avg.)')
+axs1_leg = axs1.legend(loc='upper left', title='28-Day Projection')
 axs1_leg._legend_box.align = 'left'
-axs1.set_ylim(50, 400)
-axs1.set_xlim(left=last_day, right=max(xdata_plus14))
-axs1.set_xticks([xdata_last14.iat[1], xdata_last14.iat[7], xdata_last14.iat[14]])
+axs1.set_ylim(150, 650)
+axs1.set_xlim(left=last_day, right=max(xdata_plus))
+axs1.xaxis.set_major_locator(DayLocator(interval=7))
+axs1.xaxis.set_minor_locator(DayLocator(interval=1))
 axs1.tick_params(which='both', color=custom_tick_color)
-# axs1.xaxis.set_minor_locator(AutoMinorLocator(7))
 # axs1.grid()
 
 
-print('Plotting counties...')
-for county in selection_counties_list:
-    axs2.plot(dates_cases, normed_cases_dataset[county], label=county, linewidth=1.0)
-
-axs2.set_ylim(0)
-axs2.set_xlim(dates_cases[39], right=max(dates_cases))
-axs2.tick_params(which='both', color=custom_tick_color)
-axs2.xaxis.set_major_locator(MultipleLocator(48))
-axs2.xaxis.set_minor_locator(AutoMinorLocator())
-axs2_leg = axs2.legend(loc='upper left', title='New Cases Per 100k by County')
-axs2_leg._legend_box.align = 'left'
+# print('Plotting counties...')
+# for county in selection_counties_list:
+#     axs2.plot(dates_cases, normed_cases_dataset[county], label=county, linewidth=1.0)
+#
+# axs2.set_ylim(0)
+# axs2.set_xlim(dates_cases[39], right=max(dates_cases))
+# axs2.tick_params(which='both', color=custom_tick_color)
+# axs2.xaxis.set_major_locator(MultipleLocator(48))
+# axs2.xaxis.set_minor_locator(AutoMinorLocator())
+# axs2_leg = axs2.legend(loc='upper left', title='New Cases Per 100k by County')
+# axs2_leg._legend_box.align = 'left'
 
 # axs1.set_ylim(0)
 # # xmax = axs1.get_xlim()[1]
