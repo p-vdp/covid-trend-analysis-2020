@@ -68,9 +68,9 @@ cases_confirmed_url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19
 cases_deaths_url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data' \
                    '/csse_covid_19_time_series/time_series_covid19_deaths_US.csv '
 
-# selection_counties_list = ['Los Angeles']
-selection_counties_list = ['Alameda', 'Contra Costa', 'Marin', 'Napa', 'San Francisco', 'San Mateo', 'Santa Clara',
-                           'Solano', 'Sonoma']
+selection_counties_list = ['Los Angeles']
+# selection_counties_list = ['Alameda', 'Contra Costa', 'Marin', 'Napa', 'San Francisco', 'San Mateo', 'Santa Clara',
+#                           'Solano', 'Sonoma']
 selection_counties = pd.Series(selection_counties_list)
 selection_cols_to_drop = ['UID', 'iso2', 'iso3', 'code3', 'FIPS', 'Province_State', 'Country_Region', 'Lat', 'Long_',
                           'Combined_Key', 'Population']
@@ -171,7 +171,7 @@ ax_leg = ax.legend(loc='upper left', title=r'$\bf{New}$' + ' ' +
                                            r'$\bf{Per}$' + ' ' +
                                            r'$\bf{100k}$')
 ax_leg._legend_box.align = 'left'
-ax.set_ylim(0, 450)
+ax.set_ylim(0, 120)
 ax.set_xlim(dates_cases[131], right=max(dates_cases))
 ax.xaxis.set_major_locator(MonthLocator(bymonth=range(6, 13)))
 ax.xaxis.set_minor_locator(DayLocator(bymonthday=[15]))
@@ -236,19 +236,21 @@ for i in range(1, 5):
     axs1.fill_between(xdata_plus, ci_upper(xdata_plus_index), ci_lower(xdata_plus_index), alpha=0.3)
 
 
-# plot
+# format lower plot
 xlim_left = dates_cases[skip_days + 27]
-ylim_bottom = 150
+ylim_bottom = 0
 
 axs1_leg = axs1.legend(loc='upper left', title=r'$\bf{28}$' + '-' + r'$\bf{Day}$' + ' ' + r'$\bf{Projection}$')
 axs1_leg._legend_box.align = 'left'
 
-axs1.set_ylim(ylim_bottom, 1100)
+axs1.set_ylim(ylim_bottom, 450)
 axs1.set_xlim(left=xlim_left, right=max(xdata_plus))
 axs1.xaxis.set_major_locator(DayLocator(interval=7))
 axs1.xaxis.set_minor_locator(DayLocator(interval=1))
 axs1.tick_params(which='both', color=custom_tick_color)
 
+
+# show figure
 print('Displaying plot...')
 plt.show()
 print('Exiting...')
