@@ -156,7 +156,7 @@ axs1 = fig.add_subplot(gs[1, 0])
 # top fig: totals and averages normalized per 100k
 print('Plotting totals and averages...')
 
-ax_line = ax.plot(dates_cases, normed_cases_dataset['sum'], label='Total - Nine Bay Area Counties',
+ax_line = ax.plot(dates_cases, normed_cases_dataset['sum'], label='Total - Los Angeles County',
                   linewidth=1, color='#99958a')
 ax.plot(dates_cases, normed_cases_dataset['avg_sum_7day'], label='Moving 7-Day Average',
         linewidth=2, color='#2AA198')

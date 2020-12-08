@@ -124,3 +124,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+Fig_raw_LA.psd
+*.png
+*.psd
