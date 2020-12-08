@@ -264,7 +264,7 @@ for i in range(1, 6):                                           # https://stacko
 # axs1.plot(xdata, ydata, label='Moving 28-Day Average',
 #         linewidth=4, color='#6C71C4')
 
-axs1_leg = axs1.legend(loc='upper left', title=r"$\bf{28-Day Projection}$")
+axs1_leg = axs1.legend(loc='upper left', title=r"$\bf{28-Day !Projection}$")
 axs1_leg._legend_box.align = 'left'
 axs1.set_ylim(150, 650)
 xlim_left = dates_cases[skip_days + 27]
