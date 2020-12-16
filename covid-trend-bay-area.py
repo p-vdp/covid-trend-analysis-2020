@@ -171,7 +171,7 @@ ax_leg = ax.legend(loc='upper left', title=r'$\bf{New}$' + ' ' +
                                            r'$\bf{Per}$' + ' ' +
                                            r'$\bf{100k}$')
 ax_leg._legend_box.align = 'left'
-ax.set_ylim(0, 450)
+ax.set_ylim(0, 600)
 ax.set_xlim(dates_cases[131], right=max(dates_cases))
 ax.xaxis.set_major_locator(MonthLocator(bymonth=range(6, 13)))
 ax.xaxis.set_minor_locator(DayLocator(bymonthday=[15]))
