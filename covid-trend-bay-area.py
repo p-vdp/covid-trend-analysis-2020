@@ -171,7 +171,7 @@ ax_leg = ax.legend(loc='upper left', title=r'$\bf{New}$' + ' ' +
                                            r'$\bf{Per}$' + ' ' +
                                            r'$\bf{100k}$')
 ax_leg._legend_box.align = 'left'
-ax.set_ylim(0, 450)
+ax.set_ylim(0, 700)
 ax.set_xlim(dates_cases[131], right=max(dates_cases))
 ax.xaxis.set_major_locator(MonthLocator(bymonth=range(6, 13)))
 ax.xaxis.set_minor_locator(DayLocator(bymonthday=[15]))
@@ -238,7 +238,7 @@ for i in range(1, 5):
 
 # plot
 xlim_left = dates_cases[skip_days + 27]
-ylim_bottom = 150
+ylim_bottom = 50
 
 axs1_leg = axs1.legend(loc='upper left', title=r'$\bf{28}$' + '-' + r'$\bf{Day}$' + ' ' + r'$\bf{Projection}$')
 axs1_leg._legend_box.align = 'left'
