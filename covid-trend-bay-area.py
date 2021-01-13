@@ -156,6 +156,38 @@ axs1 = fig.add_subplot(gs[1, 0])
 # top fig: totals and averages normalized per 100k
 print('Plotting totals and averages...')
 
+# July 4
+ax.axvline(dates_cases[164], linewidth=1)
+ax.annotate('July 4', (dates_cases[165], 400))
+
+# Labor Day
+ax.axvline(dates_cases[229], linewidth=1)
+ax.annotate('Labor Day', (dates_cases[230], 400))
+
+# Halloween
+ax.axvline(dates_cases[283], linewidth=1)
+ax.annotate('Halloween', (dates_cases[284], 400))
+
+# Election Day
+ax.axvline(dates_cases[286], linewidth=1)
+ax.annotate('Election Day', (dates_cases[287], 450))
+
+# Thanksgiving
+ax.axvline(dates_cases[309], linewidth=1)
+ax.annotate('Thanksgiving', (dates_cases[310], 600))
+
+# Xmas
+ax.axvline(dates_cases[337], linewidth=1)
+ax.annotate('Xmas', (dates_cases[338], 650))
+
+# New Year
+ax.axvline(dates_cases[344], linewidth=1)
+ax.annotate('NYE', (dates_cases[345], 700))
+
+# Lunar New Year
+# TODO
+
+# Plot counts
 ax_line = ax.plot(dates_cases, normed_cases_dataset['sum'], label='Total - Nine Bay Area Counties',
                   linewidth=1, color='#99958a')
 ax.plot(dates_cases, normed_cases_dataset['avg_sum_7day'], label='Moving 7-Day Average',
@@ -171,7 +203,7 @@ ax_leg = ax.legend(loc='upper left', title=r'$\bf{New}$' + ' ' +
                                            r'$\bf{Per}$' + ' ' +
                                            r'$\bf{100k}$')
 ax_leg._legend_box.align = 'left'
-ax.set_ylim(0, 700)
+ax.set_ylim(0, 800)
 ax.set_xlim(dates_cases[131], right=max(dates_cases))
 ax.xaxis.set_major_locator(MonthLocator(bymonth=range(6, 13)))
 ax.xaxis.set_minor_locator(DayLocator(bymonthday=[15]))
@@ -243,7 +275,7 @@ ylim_bottom = 50
 axs1_leg = axs1.legend(loc='upper left', title=r'$\bf{28}$' + '-' + r'$\bf{Day}$' + ' ' + r'$\bf{Projection}$')
 axs1_leg._legend_box.align = 'left'
 
-axs1.set_ylim(ylim_bottom, 1100)
+axs1.set_ylim(ylim_bottom, 1600)
 axs1.set_xlim(left=xlim_left, right=max(xdata_plus))
 axs1.xaxis.set_major_locator(DayLocator(interval=7))
 axs1.xaxis.set_minor_locator(DayLocator(interval=1))
