@@ -203,7 +203,7 @@ ax_leg = ax.legend(loc='upper left', title=r'$\bf{New}$' + ' ' +
                                            r'$\bf{Per}$' + ' ' +
                                            r'$\bf{100k}$')
 ax_leg._legend_box.align = 'left'
-ax.set_ylim(0, 800)
+ax.set_ylim(0, 750)
 ax.set_xlim(dates_cases[131], right=max(dates_cases))
 ax.xaxis.set_major_locator(MonthLocator(bymonth=range(6, 13)))
 ax.xaxis.set_minor_locator(DayLocator(bymonthday=[15]))
@@ -239,7 +239,7 @@ xdata_last_index = xdata_plus_index[-1 - projection_n:-1]
 
 
 # create regression curves and evaluate model fitness # https://stackoverflow.com/a/28336695
-for i in range(1, 5):
+for i in range(1, 6):
     curve_params = np.polyfit(xdata_index, ydata, i, full=True)
     p = curve_params[0]
     curve = np.poly1d(p)
@@ -275,7 +275,7 @@ ylim_bottom = 50
 axs1_leg = axs1.legend(loc='upper left', title=r'$\bf{28}$' + '-' + r'$\bf{Day}$' + ' ' + r'$\bf{Projection}$')
 axs1_leg._legend_box.align = 'left'
 
-axs1.set_ylim(ylim_bottom, 1600)
+axs1.set_ylim(ylim_bottom, 800)
 axs1.set_xlim(left=xlim_left, right=max(xdata_plus))
 axs1.xaxis.set_major_locator(DayLocator(interval=7))
 axs1.xaxis.set_minor_locator(DayLocator(interval=1))
