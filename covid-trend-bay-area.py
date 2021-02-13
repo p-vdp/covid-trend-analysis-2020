@@ -162,11 +162,11 @@ ax.annotate('July 4', (dates_cases[165], 400))
 
 # Labor Day
 ax.axvline(dates_cases[229], linewidth=1)
-ax.annotate('Labor Day', (dates_cases[230], 400))
+ax.annotate('Labor Day', (dates_cases[230], 350))
 
 # Halloween
 ax.axvline(dates_cases[283], linewidth=1)
-ax.annotate('Halloween', (dates_cases[284], 400))
+ax.annotate('Halloween', (dates_cases[262], 400))
 
 # Election Day
 ax.axvline(dates_cases[286], linewidth=1)
@@ -178,14 +178,15 @@ ax.annotate('Thanksgiving', (dates_cases[310], 600))
 
 # Xmas
 ax.axvline(dates_cases[337], linewidth=1)
-ax.annotate('Xmas', (dates_cases[338], 650))
+ax.annotate('Xmas', (dates_cases[325], 690))
 
 # New Year
 ax.axvline(dates_cases[344], linewidth=1)
 ax.annotate('NYE', (dates_cases[345], 700))
 
 # Lunar New Year
-# TODO
+ax.axvline(dates_cases[387], linewidth=1)
+ax.annotate('Lunar NY', (dates_cases[369], 650))
 
 # Plot counts
 ax_line = ax.plot(dates_cases, normed_cases_dataset['sum'], label='Total - Nine Bay Area Counties',
@@ -271,7 +272,7 @@ for i in range(1, 5):
 # plot
 xlim_left = dates_cases[skip_days + 20]
 ylim_bottom = 0
-ylim_top = 680
+ylim_top = 400
 
 axs1_leg = axs1.legend(loc='upper right', title=r'$\bf{21}$' + '-' + r'$\bf{Day}$' + ' ' + r'$\bf{Projection}$')
 axs1_leg._legend_box.align = 'left'
@@ -284,4 +285,5 @@ axs1.tick_params(which='both', color=custom_tick_color)
 
 print('Displaying plot...')
 plt.show()
+fig.savefig('fig.png')
 print('Exiting...')
